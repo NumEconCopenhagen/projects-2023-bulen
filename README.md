@@ -1,8 +1,8 @@
-# \[Group name\]
+# \[Bulen\]
 
 **Group members:**
-- A
-- B
+- Julius
+- Sophie
 - C
 
 This repository contains  
