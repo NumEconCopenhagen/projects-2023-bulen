@@ -1,9 +1,8 @@
-# \[Bulen\]
+# \Bulen\
 
 **Group members:**
 - Julius
 - Sophie
-- C
 
 This repository contains  
 1. Inaugural project. 
