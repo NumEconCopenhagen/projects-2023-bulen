@@ -1,4 +1,4 @@
-# ☠/Bulen\☠
+# ☠Bulen☠
 
 **Group members:**
 - Julius
