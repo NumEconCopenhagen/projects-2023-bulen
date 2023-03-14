@@ -39,8 +39,8 @@ class HouseholdSpecializationModelClass:
         par.omega = 0.5 
 
         # c. household production
-        par.alpha = 1
-        par.sigma = 0
+        par.alpha = 0.5
+        par.sigma = 1
 
         # d. wages
         par.wM = 1.0
@@ -70,11 +70,11 @@ class HouseholdSpecializationModelClass:
         C = par.wM*LM + par.wF*LF
 
         # b. home production
-
+        
         if par.sigma == 1:
             H = HM**(1-par.alpha)*HF**par.alpha
         elif par.sigma == 0:
-            H = np.min(HM, HF)
+            H = np.minimum(HM,HF)
         else: 
             H = ((1-par.alpha)*HM**((par.sigma-1)/par.sigma) + par.alpha*HF**((par.sigma-1)/par.sigma))**(par.sigma/(par.sigma-1))
 
@@ -124,6 +124,8 @@ class HouseholdSpecializationModelClass:
         opt.HF = HF[j]
 
         g=opt.HF/opt.HM
+
+        opt.g=g
 
         # e. print
         if do_print:
