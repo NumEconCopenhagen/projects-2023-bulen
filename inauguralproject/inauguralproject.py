@@ -6,6 +6,23 @@ from scipy import optimize
 import pandas as pd 
 import matplotlib.pyplot as plt
 
+
+def square(x):
+    """ square numpy array
+    
+    Args:
+    
+        x (ndarray): input array
+        
+    Returns:
+    
+        y (ndarray): output array
+    
+    """
+    
+    y = x**2
+    return y
+
 class HouseholdSpecializationModelClass:
 
     def __init__(self):
@@ -98,10 +115,14 @@ class HouseholdSpecializationModelClass:
         opt.LF = LF[j]
         opt.HF = HF[j]
 
+        g=opt.HF/opt.HM
+
         # e. print
         if do_print:
             for k,v in opt.__dict__.items():
                 print(f'{k} = {v:6.4f}')
+            print(f'HF/HM = {g}')
+               
 
         return opt
 
