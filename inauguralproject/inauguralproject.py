@@ -125,9 +125,13 @@ class HouseholdSpecializationModelClass:
         opt.LF = LF[j]
         opt.HF = HF[j]
 
-        g=opt.HF/opt.HM
+        g = opt.HF/opt.HM
+        h = par.wF/par.wM
 
-        opt.g=g
+    
+
+        opt.g = g
+        opt.h = h
 
         # e. print
         if do_print:
