@@ -147,15 +147,8 @@ class HouseholdSpecializationModelClass:
 
         par = self.par
         sol = self.sol = SimpleNamespace()
-        
-        # a. all possible choices
 
-    
-
-    
-
-
-        # b. call solver
+        # a. call solver
 
 
         target = [(12,12,12,12)]
