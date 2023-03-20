@@ -145,6 +145,44 @@ class HouseholdSpecializationModelClass:
     def solve(self,do_print=False):
         """ solve model continously """
 
+        par = self.par
+        sol = self.sol = SimpleNamespace()
+        
+        # a. all possible choices
+
+    
+
+    
+
+
+        # b. call solver
+
+
+        target = [(12,12,12,12)]
+
+        bounds = ((0,24),(0,24),(0,24),(0,24))
+        
+
+        obj = lambda x: -self.calc_utility(x[0],x[1],x[2],x[3])
+    
+        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds)
+
+        # c. save results
+        sol.LM_vec = result.x[0]
+        sol.HM_vec = result.x[1]
+        sol.LF_vec = result.x[2]
+        sol.HF_vec = result.x[3]
+
+
+        g = sol.HF_vec/sol.HM_vec
+        
+        sol.g=g
+
+        h = par.wF/par.wM
+
+        sol.h=h
+        
+        return sol
         pass    
 
     def solve_wF_vec(self,discrete=False):
