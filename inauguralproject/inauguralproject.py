@@ -189,7 +189,7 @@ class HouseholdSpecializationModelClass:
         for k in par.wF_vec: #Solving HM/HF for different values of wF 
             self.par.wF=k
             temp=self.solve()
-            y.append(temp.HF/temp.HM)
+            y.append(np.log(temp.HF/temp.HM))
             
 
 
@@ -221,7 +221,7 @@ class HouseholdSpecializationModelClass:
     
     
         bounds = ((0,1), (0,5))
-        target = [(0.5, 1)]
+        target = [(0.99, 0.1)]
 
             
         obj = lambda x: self.deviation(x[0], x[1])
