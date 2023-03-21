@@ -7,21 +7,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def square(x):
-    """ square numpy array
-    
-    Args:
-    
-        x (ndarray): input array
-        
-    Returns:
-    
-        y (ndarray): output array
-    
-    """
-    
-    y = x**2
-    return y
 
 class HouseholdSpecializationModelClass:
 
@@ -40,7 +25,7 @@ class HouseholdSpecializationModelClass:
 
         # c. household production
         par.alpha = 0.5
-        par.sigma = 1
+        par.sigma = 1.0
 
         # d. wages
         par.wM = 1.0
@@ -59,6 +44,8 @@ class HouseholdSpecializationModelClass:
 
         sol.beta0 = np.nan
         sol.beta1 = np.nan
+
+        
 
     def calc_utility(self,LM,HM,LF,HF):
         """ calculate utility """
@@ -155,6 +142,49 @@ class HouseholdSpecializationModelClass:
         constraintz = [{'type':'ineq', 'fun': constraint1},{'type':'ineq','fun': constraint2}]
 
 
+        target = [(5,5,5,5)]
+
+        bounds = ((0,24),(0,24),(0,24),(0,24))
+        
+
+        obj = lambda x: -self.calc_utility(x[0],x[1],x[2],x[3])
+    
+        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds, constraints = constraintz, tol=10e-07)
+
+        # c. save results
+        sol.LM = result.x[0]
+        sol.HM = result.x[1]
+        sol.LF = result.x[2]
+        sol.HF = result.x[3]
+
+        print(sol.HF)
+        print(sol.HM)
+        
+        g = sol.HF/sol.HM
+        
+        sol.g=g
+
+        h = par.wF/par.wM
+
+        sol.h=h
+        
+        return sol
+        pass    
+
+    def solve_wF_vec(self,discrete=False):
+        """ solve model for vector of female wages """
+
+        
+        par = self.par
+        sol = self.sol = SimpleNamespace()
+
+        # a. call solver
+
+        constraint1 = lambda x: 24 - (x[0] + x[1])
+        constraint2 = lambda x: 24 - (x[2] + x[3])
+        constraintz = [{'type':'ineq', 'fun': constraint1},{'type':'ineq','fun': constraint2}]
+
+
         target = [(12,12,12,12)]
 
         bounds = ((0,24),(0,24),(0,24),(0,24))
@@ -181,6 +211,56 @@ class HouseholdSpecializationModelClass:
         
         return sol
         pass    
+
+
+    def run_regression(self):
+        """ run regression """
+
+        par = self.par
+        sol = self.sol = SimpleNamespace()
+
+
+        self.solve_wF_vec()
+
+
+        x = np.log(par.wF_vec)
+        y = np.log(sol.HF_vec/sol.HM_vec)
+        A = np.vstack([np.ones(x.size),x]).T # Creates coefficient matrix, a column of five 1's as the constants, and a column size=5 from the wF array as beta_1 coefficients
+        sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0] #Regressing by least squares with y=y and x=A
+        
+        print(sol.beta0)
+        return sol
+    
+
+    def deviation(self, alpha, sigma):
+        par=self.par
+        temp = self.run_regression()
+        return ((par.beta0_target- temp.beta0)**2 + (par.beta1_target + temp.beta1)**2)
+
+
+       
+    def estimate(self,alpha=None,sigma=None):
+        """ estimate alpha and sigma """
+
+        
+        sol = self.sol=SimpleNamespace()
+    
+    
+        bounds = ((0,1), (0,5))
+        target = [(0.5, 1)]
+
+            
+        obj = lambda x: self.deviation(x[0], x[1])
+
+        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds)
+
+        sol.alpha=result.x[0]
+        sol.sigma=result.x[1]
+
+
+        return sol
+
+        pass
 
     def solve_wF_vec(self,discrete=False):
         """ solve model for vector of female wages """
