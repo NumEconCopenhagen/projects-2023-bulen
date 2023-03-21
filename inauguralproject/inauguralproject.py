@@ -196,7 +196,7 @@ class HouseholdSpecializationModelClass:
         y = []
         sol.y=y
 
-        for k in par.wF_vec: # 
+        for k in par.wF_vec: #Solving HM/HF for different values of wF 
             self.par.wF=k
             temp=self.solve()
             sol.y.append(temp.HM_vec/temp.HF_vec)
