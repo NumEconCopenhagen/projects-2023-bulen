@@ -142,8 +142,8 @@ class HouseholdSpecializationModelClass:
 
         return opt
 
-    def solve(self,do_print=False):
-        """ solve model continously """
+    def solve(self, do_print=False):
+        """ solve model continuously """
 
         par = self.par
         sol = self.sol = SimpleNamespace()
@@ -191,14 +191,53 @@ class HouseholdSpecializationModelClass:
         """ run regression """
 
         par = self.par
-        sol = self.sol
+        sol = self.sol = SimpleNamespace()
+
+        y = []
+        sol.y=y
+
+        for k in par.wF_vec: # 
+            self.par.wF=k
+            temp=self.solve()
+            sol.y.append(temp.HM_vec/temp.HF_vec)
+            
+
 
         x = np.log(par.wF_vec)
-        y = np.log(sol.HF_vec/sol.HM_vec)
-        A = np.vstack([np.ones(x.size),x]).T
-        sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
+        
+        A = np.vstack([np.ones(x.size),x]).T # Creates coefficient matrix, a column of five 1's as the constants, and a column size=5 from the wF array as beta_1 coefficients
+        sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0] #Regressing by least squares with y=y and x=A
+
+        return sol
     
+
+    def deviation(self, alpha, sigma):
+        par=self.par
+    
+        temp = self.run_regression()
+        return ((par.beta0_target- temp.beta0)**2 + (par.beta1_target + temp.beta1)**2)
+
+
+       
     def estimate(self,alpha=None,sigma=None):
         """ estimate alpha and sigma """
+
+        
+        sol = self.sol=SimpleNamespace()
+    
+    
+        bounds = ((0,1), (0,5))
+        target = [(0.5, 1)]
+
+            
+        obj = lambda x: self.deviation(x[0], x[1])
+
+        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds)
+
+        sol.alpha=result.x[0]
+        sol.sigma=result.x[1]
+
+
+        return sol
 
         pass
