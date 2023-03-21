@@ -150,6 +150,10 @@ class HouseholdSpecializationModelClass:
 
         # a. call solver
 
+        constraint1 = lambda x: 24 - (x[0] + x[1])
+        constraint2 = lambda x: 24 - (x[2] + x[3])
+        constraintz = [{'type':'ineq', 'fun': constraint1},{'type':'ineq','fun': constraint2}]
+
 
         target = [(12,12,12,12)]
 
@@ -158,7 +162,7 @@ class HouseholdSpecializationModelClass:
 
         obj = lambda x: -self.calc_utility(x[0],x[1],x[2],x[3])
     
-        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds)
+        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds, constraints = constraintz)
 
         # c. save results
         sol.LM_vec = result.x[0]
