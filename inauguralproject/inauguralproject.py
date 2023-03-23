@@ -186,7 +186,7 @@ class HouseholdSpecializationModelClass:
         y = []
         
 
-        for k in par.wF_vec: #Solving HM/HF for different values of wF 
+        for k in par.wF_vec: #Solving log(HM/HF) for different values of wF 
             self.par.wF=k
             temp=self.solve()
             y.append(np.log(temp.HF/temp.HM))
@@ -196,20 +196,23 @@ class HouseholdSpecializationModelClass:
         x = np.log(par.wF_vec)
         
         A = np.vstack([np.ones(x.size),x]).T # Creates coefficient matrix, a column of five 1's as the constants, and a column size=5 from the wF array as beta_1 coefficients
-        sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0] #Regressing by least squares with y=y and x=A
+        sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0] #Regressing by least squares with dependent vector=y and independent vector=A
         sol.y=y
-        print(sol.y)
+        
         return sol
         
     
 
     def deviation(self, alpha, sigma):
+        """calculating the sum of squares"""
         par=self.par
+        
         par.alpha=alpha
         par.sigma=sigma
         temp = self.run_regression()
         errors=((par.beta0_target- temp.beta0)**2 + (par.beta1_target + temp.beta1)**2)
         return errors
+        
 
 
        
@@ -220,17 +223,17 @@ class HouseholdSpecializationModelClass:
         sol = self.sol=SimpleNamespace()
     
     
-        bounds = ((0,1), (0,5))
-        target = [(0.99, 0.1)]
+        bounds = ((0.9,0.9999999999999), (0.01,0.019))  # bounds and target chosen by examining 3D plot of sum of squares
+        target = [(0.99, 0.015)]
 
             
         obj = lambda x: self.deviation(x[0], x[1])
 
-        result = optimize.minimize(obj, target, method='Nelder-Mead', bounds=bounds)
+        result = optimize.minimize(obj, target, method='Nelder-Mead', bounds=bounds, tol= 10e-17)
 
         sol.alpha=result.x[0]
         sol.sigma=result.x[1]
-
+        
 
         return sol
 
