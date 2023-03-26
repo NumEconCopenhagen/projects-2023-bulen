@@ -1,6 +1,8 @@
 # Inaugural project
 
-The **results** of the project can be seen from running [inauguralproject.ipynb](inauguralproject.ipynb).
+The **results** of the project can be seen from running [inauguralproject.ipynb](inauguralproject.ipynb)
+
+The main functions are found in the identically named .py file.
 
 Group members:
 
