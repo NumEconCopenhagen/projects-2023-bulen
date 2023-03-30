@@ -208,7 +208,7 @@ class HouseholdSpecializationModelClass:
         par.alpha=alpha
         par.sigma=sigma
         temp = self.run_regression()
-        errors=((par.beta0_target- temp.beta0)**2 + (par.beta1_target + temp.beta1)**2)
+        errors=((par.beta0_target- temp.beta0)**2 + (par.beta1_target - temp.beta1)**2)
         return errors
         
 
@@ -346,7 +346,7 @@ class HouseholdSpecializationModelClass:
         par.epsilonf=epsilonf
         par.sigma=sigma
         temp = self.run_regression_ext()
-        errors=((par.beta0_target- temp.beta0)**2 + (par.beta1_target + temp.beta1)**2)
+        errors=((par.beta0_target- temp.beta0)**2 + (par.beta1_target - temp.beta1)**2)
         return errors
         
 
@@ -359,8 +359,8 @@ class HouseholdSpecializationModelClass:
         sol = self.sol=SimpleNamespace()
     
     
-        bounds = ((2.5,3), (0.6,1.4))  # bounds and target chosen by examining 3D plot of sum of squares
-        target = [(2.8, 1)]
+        bounds = ((2.2,2.4), (1,2.5))  # bounds and target chosen by examining 3D plot of sum of squares
+        target = [(2.3, 1)]
 
             
         obj = lambda x: self.deviation_ext(x[0], x[1])
