@@ -11,6 +11,6 @@ We apply the **following datasets**:
 
 **Dependencies:** Apart from a standard Anaconda Python 3 installation, the project requires the following installations:
 
-``%pip install git+https://github.com/elben10/pydst
+``%pip install git+https://github.com/elben10/pydst``
 
-%pip install pandas-datareader``
+``%pip install pandas-datareader``
