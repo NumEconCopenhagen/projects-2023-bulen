@@ -14,4 +14,3 @@ We apply the **following datasets**:
 
 ``%pip install git+https://github.com/elben10/pydst``
 
-``%pip install pandas-datareader``
