@@ -1,22 +1,105 @@
-from scipy import optimize
+"""
+  A simple model of fertility transition based on income and education levels.
+"""
+from types import SimpleNamespace
+import numpy as np
+from scipy.optimize import minimize_scalar
 
-def solve_ss(alpha, c):
-    """ Example function. Solve for steady state k. 
+class FertilityModel():
 
-    Args:
-        c (float): costs
-        alpha (float): parameter
+  def __init__(self):
 
-    Returns:
-        result (RootResults): the solution represented as a RootResults object.
+      par = self.par = SimpleNamespace()
 
-    """ 
+      # Utility function parameters
+      par.beta = 0.95 # Altruistic motives
+      par.eta = 0.5 # Decreasing returns to education
+      par.alpha = 0.1 # The fixed cost of raising a child
+      par.rho = 1.5 # Relative risk aversion
+      par.tau = lambda y: 0.1*y # The marginal cost of each year of schooling
+      par.theta = 0.1 # The time cost proportional to parental income
+      par.a = 10 # A constant representing the maximum number of children over a lifetime
+      par.gamma = 0.5 # Tax on having more than two children
+
+      #self.e = None
+
+  # Define the utility function with CRRA
+  def u(self,c):
     
-    # a. Objective function, depends on k (endogenous) and c (exogenous).
-    f = lambda k: k**alpha - c
-    obj = lambda kss: kss - f(kss)
-
-    #. b. call root finder to find kss.
-    result = optimize.root_scalar(obj,bracket=[0.1,100],method='bisect')
+      par = self.par
+      
+      if par.rho == 1:
+          return np.log(c)
+      else:
+          return (c**(1-par.rho))/(1-par.rho)
     
-    return result
+  # Define production function for human capital
+  def h(self,e):
+    par = self.par
+    return (1+e)**par.eta
+  
+  # Define fertility function
+  def n(self, s, y):
+    
+    par = self.par
+
+    par.phi = par.alpha + par.theta*y
+    #self.e = (-1/(1-par.eta)) + ((par.eta/(1-par.eta))*(par.phi/par.tau(y)))
+    return ((1-par.eta)/((1+(1/par.beta))*par.theta))*(1/s)*(1+1/(par.phi/par.tau(y)-1))
+
+  # Define log-linearized fertility function
+  def log_n(self, s, y):
+    
+    par = self.par
+
+    return par.a - np.log(s) - np.log(par.phi/par.tau(y))
+
+
+  # Define objective function to maximize
+  def V(self, args):
+    
+    par = self.par
+
+    c, s, y = args
+    return -1*(self.u(c) + par.beta*self.u(s*self.n(s, y)*self.h))
+
+  # Define constraint
+  def constraint(self, args):
+    
+    par = self.par
+
+    c, s, y, e = args
+    n = self.n(s, y)
+    par.phi = par.alpha + par.theta*y
+    #self.e = (-1/(1-par.eta)) + ((par.eta/(1-par.eta))*(par.phi/par.tau(y)))
+    if par.gamma == 0: #constraint without tax
+       return y - c - (par.phi*s*n) - (par.tau(y)*e*s*n) 
+    elif par.gamma != 0 and n <= 2: #Constraint with tax
+       return y - c - (par.phi*s*n) - (par.tau(y)*e*s*n)
+    else:
+       return y - c - (par.phi*s*n) - (par.tau(y)*e*s*n) - (par.gamma*(n-2)*y)
+  
+
+  def solution(self):
+    # Define initial guess
+    c_guess = 1
+    s_guess = 0.9
+    y_guess = 100
+    e_guess = 10
+
+    # Call constraint method to calculate the constraint value
+    const = {'type': 'eq', 'fun': self.constraint}
+
+    # Solve the optimization problem
+    sol = minimize_scalar(self.V, (c_guess, s_guess, y_guess, e_guess), method='bounded', bounds=((0, y_guess), (0, 1), (0, None)), constraints=const)
+
+    # Extract results
+    c_star, s_star, y_star, e_star = sol.x
+
+    # Print results
+    print(f"Optimal consumption: {c_star:.2f}")
+    print(f"Optimal survival probability: {s_star:.2f}")
+    print(f"Optimal income: {y_star:.2f}")
+    print(f"Optimal education: {e_star:.2f}")
+    print(f"Optimal number of children: {self.n(s_star, y_star):.2f}")
+    print(f"Log-linearized optimal number of children: {self.log_n(s_star, y_star):.2f}")
