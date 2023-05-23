@@ -65,9 +65,11 @@ class HouseholdSpecializationModelClass:
         elif par.sigma == 0:
             H = np.minimum(HM,HF)
         else: 
-            with np.errstate(all='ignore'):
-                H = ((1-par.alpha)*HM**((par.sigma-1)/par.sigma) + par.alpha*HF**((par.sigma-1)/par.sigma))**(par.sigma/(par.sigma-1))
-            
+            HM = np.fmax(HM, 1e-07)
+            HF = np.fmax(HF, 1e-07)
+            inner = (1-par.alpha)*HM**((par.sigma-1)/par.sigma) + par.alpha*HF**((par.sigma-1)/par.sigma)
+            H = np.fmax(inner, 1e-07)**(par.sigma/(par.sigma-1))
+        
 
         
 
@@ -137,7 +139,7 @@ class HouseholdSpecializationModelClass:
         """ solve model continuously """
 
         par = self.par
-        sol = self.sol = SimpleNamespace()
+        sol = self.sol
 
         # a. call solver
 
@@ -153,7 +155,7 @@ class HouseholdSpecializationModelClass:
 
         obj = lambda x: -self.calc_utility(x[0],x[1],x[2],x[3])
     
-        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds, constraints = constraintz, tol= 10e-34)
+        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds, constraints = constraintz, tol= 10e-10)
 
         # c. save results
         sol.LM = result.x[0]
@@ -179,7 +181,7 @@ class HouseholdSpecializationModelClass:
         """ run regression """
 
         par = self.par
-        sol = self.sol = SimpleNamespace()
+        sol = self.sol
 
         y = []
         
@@ -218,7 +220,7 @@ class HouseholdSpecializationModelClass:
         """ estimate alpha and sigma """
         par=self.par
         
-        sol = self.sol=SimpleNamespace()
+        sol = self.sol
     
     
         bounds = ((0.9,0.9999999999999), (0.01,0.019))  # bounds and target chosen by examining 3D plot of sum of squares
@@ -227,7 +229,7 @@ class HouseholdSpecializationModelClass:
             
         obj = lambda x: self.deviation(x[0], x[1])
 
-        result = optimize.minimize(obj, target, method='Nelder-Mead', bounds=bounds, tol= 10e-17)
+        result = optimize.minimize(obj, target, method='Nelder-Mead', bounds=bounds, tol= 10e-10)
 
         sol.alpha=result.x[0]
         sol.sigma=result.x[1]
@@ -277,8 +279,7 @@ class HouseholdSpecializationModelClass:
         """ solve model continuously """
 
         par = self.par
-        sol = self.sol = SimpleNamespace()
-
+        sol = self.sol 
         # a. call solver
 
         constraint1 = lambda x: 24 - (x[0] + x[1])
@@ -293,7 +294,7 @@ class HouseholdSpecializationModelClass:
 
         obj = lambda x: -self.calc_utility_ext(x[0],x[1],x[2],x[3])
     
-        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds, constraints = constraintz, tol= 10e-34)
+        result = optimize.minimize(obj, target, method='SLSQP', bounds=bounds, constraints = constraintz, tol= 10e-10)
 
         # c. save results
         sol.LM = result.x[0]
@@ -317,7 +318,7 @@ class HouseholdSpecializationModelClass:
         """ run regression """
 
         par = self.par
-        sol = self.sol = SimpleNamespace()
+        sol = self.sol
 
         y = []
         
@@ -356,7 +357,7 @@ class HouseholdSpecializationModelClass:
         """ estimate alpha and sigma """
         par=self.par
         
-        sol = self.sol=SimpleNamespace()
+        sol = self.sol
     
     
         bounds = ((2.2,2.4), (1,2.5))  # bounds and target chosen by examining 3D plot of sum of squares
@@ -365,7 +366,7 @@ class HouseholdSpecializationModelClass:
             
         obj = lambda x: self.deviation_ext(x[0], x[1])
 
-        result = optimize.minimize(obj, target, method='Nelder-Mead', bounds=bounds, tol= 10e-17)
+        result = optimize.minimize(obj, target, method='Nelder-Mead', bounds=bounds, tol= 10e-10)
 
         sol.epsilonf=result.x[0]
         sol.sigma=result.x[1]
