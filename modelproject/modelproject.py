@@ -84,8 +84,8 @@ class FertilityModel:
 
         c, s, y = args
         n = self.n(s, y)
-        #par.phi = par.alpha + par.theta*y
-        #par.e = (-1/(1-par.eta)) + ((par.eta/(1-par.eta))*(par.phi/par.tau(y)))
+        par.phi = par.alpha + par.theta*y
+        par.e = (-1/(1-par.eta)) + ((par.eta/(1-par.eta))*(par.phi/par.tau(y)))
         if par.gamma == 0: #constraint without tax
             return y - c - (self.phi(y)*s*n) - (par.tau*self.e_star(y)*s*n)
         elif par.gamma != 0 and n <= 2: #Constraint with tax
@@ -94,7 +94,7 @@ class FertilityModel:
             return y - c - (self.phi(y)*s*n) - (par.tau*self.e_star(y)*s*n) - (par.gamma*(n-2)*y)
     
 
-    def solution(self):
+    def solution(self, args):
         # Define initial guess
         c_guess = 1
         s_guess = 0.9
