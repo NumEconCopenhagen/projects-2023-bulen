@@ -13,31 +13,27 @@ class FertilityModel:
         # Utility function parameters
         par.beta = 0.95 # Altruistic motives
         par.eta = 0.5 # Decreasing returns to education
-        par.alpha = 0.1 # The fixed cost of raising a child
-        par.rho = 1.5 # Relative risk aversion
-        par.tau = 1 # tmp value
-        #par.phi = 1 # tmp value
-        #lambda y: 0.1*y # The marginal cost of each year of schooling
-        
+        par.alpha = 500 # The fixed cost of raising a child
+        par.rho = 1.9 # Relative risk aversion
+        par.tau = lambda y: 0.1*y  # tmp value
         par.theta = 0.1 # The time cost proportional to parental income
-        par.a = 10 # A constant representing the maximum number of children over a lifetime
-        par.gamma = 0.5 # Tax on having more than two children
+        par.a = 5 # A constant representing the maximum number of children over a lifetime
+        par.gamma = 0 # Tax on having more than two children
 
     # Define e* after other par initialized
     def e_star(self, y):
         par = self.par
-        return -(1/(1-par.eta))+(par.eta/(1-par.eta))*(self.phi(y)/par.tau) # value for e based on parametrization.
+        return -(1/(1-par.eta))+(par.eta/(1-par.eta))*(self.phi(y)/par.tau(y)) # value for e based on parametrization.
+    
     
     # Update functions for varying paramaters
     def phi(self, y):
         par = self.par
         return par.alpha + par.theta*y
-        # return just tells the function to terminate, but the update is made in the par property.
 
     
     # Define the utility function with CRRA
     def u(self,c):
-        
         par = self.par
         
         if par.rho == 1:
@@ -50,27 +46,21 @@ class FertilityModel:
         par = self.par
         return (1+e)**par.eta
     
+    
     # Define fertility function
     def n(self, s, y):
-        
         par = self.par
 
-        #par.phi = par.alpha + par.theta*y
-        #par.e = (-1/(1-par.eta)) + ((par.eta/(1-par.eta))*(par.phi/par.tau(y)))
-        return ((1-par.eta)/((1+(1/par.beta))*par.theta))*(1/s)*(1+1/(self.phi(y)/par.tau-1))
+        return ((1-par.eta)/((1+(1/par.beta))*par.theta))*(1/s)*(1+1/(self.phi(y)/par.tau(y)-1))
 
     # Define log-linearized fertility function
     def log_n(self, s, y):
-        
         par = self.par
 
-        #par.e = (-1/(1-par.eta)) + ((par.eta/(1-par.eta))*(par.phi/par.tau))
-        return par.a - np.log(s) - np.log(self.phi(y)/par.tau)
-
+        return par.a - np.log(s) - np.log(self.phi(y)/par.tau(y))
 
     # Define objective function to maximize
     def V(self, args):
-        
         par = self.par
 
         c, s, y = args
@@ -79,40 +69,37 @@ class FertilityModel:
 
     # Define constraint
     def constraint(self, args):
-        
         par = self.par
 
         c, s, y = args
         n = self.n(s, y)
-        par.phi = par.alpha + par.theta*y
-        par.e = (-1/(1-par.eta)) + ((par.eta/(1-par.eta))*(par.phi/par.tau(y)))
-        if par.gamma == 0: #constraint without tax
-            return y - c - (self.phi(y)*s*n) - (par.tau*self.e_star(y)*s*n)
-        elif par.gamma != 0 and n <= 2: #Constraint with tax
-            return y - c - (self.phi(y)*s*n) - (par.tau*self.e_star(y)*s*n)
+        if par.gamma == 0:  # constraint without tax
+            return y - c - (self.phi(y) * s * n) - (par.tau(y) * self.e_star(y) * s * n)
+        elif par.gamma != 0 and n <= 2:  # Constraint with tax
+            return y - c - (self.phi(y) * s * n) - (par.tau(y) * self.e_star(y) * s * n)
         else:
-            return y - c - (self.phi(y)*s*n) - (par.tau*self.e_star(y)*s*n) - (par.gamma*(n-2)*y)
-    
+            return y - c - (self.phi(y) * s * n) - (par.tau(y) * self.e_star(y) * s * n) - (par.gamma * (n - 2) * y)
 
-    def solution(self, args):
+    def solution(self):
         # Define initial guess
-        c_guess = 1
-        s_guess = 0.9
-        y_guess = 100
-
+        initial_guesses = (100, 0.8, 1000)
 
         # Call constraint method to calculate the constraint value
-        const = {'type': 'eq', 'fun': self.constraint}
+        const = {'type': 'ineq', 'fun': self.constraint}
 
         # Solve the optimization problem
-        sol = minimize(self.V, (c_guess, s_guess, y_guess), method='L-BFGS-B', bounds=((0, y_guess), (0, 1), (0, None)), constraints=const)
+        sol = minimize(self.V, initial_guesses, method='SLSQP', bounds=[(0, None), (0, None), (0, None)],  constraints=const)
 
         # Extract results
         c_star, s_star, y_star = sol.x
 
-        # Print results
-        print(f"Optimal consumption: {c_star:.2f}")
-        print(f"Optimal survival probability: {s_star:.2f}")
-        print(f"Optimal income: {y_star:.2f}")
-        print(f"Optimal number of children: {self.n(s_star, y_star):.2f}")
-        print(f"Log-linearized optimal number of children: {self.log_n(s_star, y_star):.2f}")
+       # Return the results as a dictionary
+        results = {
+            "Optimal consumption": c_star,
+            "Optimal survival probability": s_star,
+            "Optimal income": y_star,
+            "Optimal number of children": self.n(s_star, y_star),
+            "Log-linearized optimal number of children": self.log_n(s_star, y_star)
+         }
+
+        return results
